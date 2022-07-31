@@ -4,8 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-wget = "*"
 isort = "*"
+requests = "*"
 
 [dev-packages]
 black = "*"
