@@ -30,7 +30,7 @@ def download(url: str, destination: str, hashes: Dict[str, str]):
         hash_func = getattr(hashlib, algorithm)
         assert hash_func(response.content).hexdigest() == hashes.get(
             algorithm
-        ), f"{algorithm} hash for downloaded file does not match expected value.s"
+        ), f"{algorithm} hash for downloaded file does not match expected value."
 
     # Save file
     with open(destination, "wb") as file:
