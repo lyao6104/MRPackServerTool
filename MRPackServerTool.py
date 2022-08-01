@@ -14,7 +14,7 @@ import requests
 SKIP_OVERRIDES = False
 SKIP_DOWNLOADS = False
 # Other constants
-REQUEST_HEADERS = {"User-Agent": "lyao6104/MRPackServerTool/0.1.1"}
+REQUEST_HEADERS = {"User-Agent": "lyao6104/MRPackServerTool/0.1.2"}
 HASH_ALGORITHMS = {
     "sha1",
     "sha512",
@@ -69,24 +69,39 @@ with ZipFile(mrpack_path) as mrpack:
 
         # Overrides
         if not SKIP_OVERRIDES:
-            print("Copying server overrides...")
+            temp_overrides_path = f"./Temp/{index_json['name']}/"
+
+            print("Copying common overrides...")
             overrides = list(
                 filter(
                     lambda name: "overrides/" in name,
                     mrpack.namelist(),
                 )
             )
-            temp_overrides_path = f"./Temp/{index_json['name']}/"
             os.makedirs(temp_overrides_path)
             mrpack.extractall(temp_overrides_path, overrides)
             for child in Path(f"{temp_overrides_path}/overrides").iterdir():
-                # print(child)
                 print(f"- Copying {child.name} folder...")
                 destination_path = f"{destination_folder}/{child.name}/"
-                # print(destination_path)
                 shutil.copytree(child, destination_path, dirs_exist_ok=True)
             shutil.rmtree("./Temp")
             print("Done copying overrides.\n")
+
+            print("Copying server overrides...")
+            overrides = list(
+                filter(
+                    lambda name: "server-overrides/" in name,
+                    mrpack.namelist(),
+                )
+            )
+            os.makedirs(temp_overrides_path)
+            mrpack.extractall(temp_overrides_path, overrides)
+            for child in Path(f"{temp_overrides_path}/server-overrides").iterdir():
+                print(f"- Copying {child.name} folder...")
+                destination_path = f"{destination_folder}/{child.name}/"
+                shutil.copytree(child, destination_path, dirs_exist_ok=True)
+            shutil.rmtree("./Temp")
+            print("Done copying server overrides.\n")
         else:
             print("DEBUG: Skipping overrides...\n")
 
