@@ -14,7 +14,7 @@ import requests
 SKIP_OVERRIDES = False
 SKIP_DOWNLOADS = False
 # Other constants
-REQUEST_HEADERS = {"User-Agent": "lyao6104/MRPackServerTool/0.1.2"}
+REQUEST_HEADERS = {"User-Agent": "lyao6104/MRPackServerTool/0.1.3"}
 HASH_ALGORITHMS = {
     "sha1",
     "sha512",
@@ -71,7 +71,7 @@ with ZipFile(mrpack_path) as mrpack:
         if not SKIP_OVERRIDES:
             temp_overrides_path = f"./Temp/{index_json['name']}/"
 
-            print("Copying common overrides...")
+            override_path_obj = Path(f"{temp_overrides_path}/overrides")
             overrides = list(
                 filter(
                     lambda name: "overrides/" in name,
@@ -80,28 +80,46 @@ with ZipFile(mrpack_path) as mrpack:
             )
             os.makedirs(temp_overrides_path)
             mrpack.extractall(temp_overrides_path, overrides)
-            for child in Path(f"{temp_overrides_path}/overrides").iterdir():
-                print(f"- Copying {child.name} folder...")
-                destination_path = f"{destination_folder}/{child.name}/"
-                shutil.copytree(child, destination_path, dirs_exist_ok=True)
-            shutil.rmtree("./Temp")
-            print("Done copying overrides.\n")
+            if not override_path_obj.exists():
+                print("Skipping common overrides as none were found.\n")
+            else:
+                print("Copying common overrides...")
+                for child in override_path_obj.iterdir():
+                    if child.is_dir():
+                        print(f"- Copying {child.name} folder...")
+                        destination_path = f"{destination_folder}/{child.name}/"
+                        shutil.copytree(child, destination_path, dirs_exist_ok=True)
+                    else:
+                        print(f"- Copying {child.name}...")
+                        destination_path = f"{destination_folder}/{child.name}"
+                        shutil.copy(child, destination_path)
+                shutil.rmtree("./Temp")
+                print("Done copying overrides.\n")
 
-            print("Copying server overrides...")
+            override_path_obj = Path(f"{temp_overrides_path}/server-overrides")
             overrides = list(
                 filter(
                     lambda name: "server-overrides/" in name,
                     mrpack.namelist(),
                 )
             )
-            os.makedirs(temp_overrides_path)
-            mrpack.extractall(temp_overrides_path, overrides)
-            for child in Path(f"{temp_overrides_path}/server-overrides").iterdir():
-                print(f"- Copying {child.name} folder...")
-                destination_path = f"{destination_folder}/{child.name}/"
-                shutil.copytree(child, destination_path, dirs_exist_ok=True)
-            shutil.rmtree("./Temp")
-            print("Done copying server overrides.\n")
+            if not override_path_obj.exists():
+                print("Skipping server overrides as none were present.\n")
+            else:
+                print("Copying server overrides...")
+                os.makedirs(temp_overrides_path)
+                mrpack.extractall(temp_overrides_path, overrides)
+                for child in override_path_obj.iterdir():
+                    if child.is_dir():
+                        print(f"- Copying {child.name} folder...")
+                        destination_path = f"{destination_folder}/{child.name}/"
+                        shutil.copytree(child, destination_path, dirs_exist_ok=True)
+                    else:
+                        print(f"- Copying {child.name}...")
+                        destination_path = f"{destination_folder}/{child.name}"
+                        shutil.copy(child, destination_path)
+                shutil.rmtree("./Temp")
+                print("Done copying server overrides.\n")
         else:
             print("DEBUG: Skipping overrides...\n")
 
@@ -131,6 +149,7 @@ with ZipFile(mrpack_path) as mrpack:
                     mod["downloads"][0],
                     f"{destination_folder}/{mod['path']}",
                     mod["hashes"],
+                    mod["fileSize"],
                 )
                 print(f"  - Download successful")
             print("Finished downloading required mods.\n")
@@ -149,6 +168,7 @@ with ZipFile(mrpack_path) as mrpack:
                         mod["downloads"][0],
                         f"{destination_folder}/{mod['path']}",
                         mod["hashes"],
+                    mod["fileSize"],
                     )
                     print(f"  - Download successful")
             print("Finished downloading optional mods.\n")
